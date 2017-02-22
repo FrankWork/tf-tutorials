@@ -57,7 +57,7 @@ flags.DEFINE_string(
     "See README.md for how to get 'questions-words.txt'.")
 flags.DEFINE_integer("embedding_size", 200, "The embedding dimension size.")
 flags.DEFINE_integer(
-    "epochs_to_train", 1, #,,  default: 15,
+    "epochs_to_train", 15,
     "Number of epochs to train. Each epoch processes the training data once "
     "completely.")
 flags.DEFINE_float("learning_rate", 0.2, "Initial learning rate.")
@@ -224,14 +224,44 @@ class Word2Vec(object):
         [opts.batch_size, 1])
 
     # Negative sampling.
+    # TODO: how this functon works ?
     sampled_ids, _, _ = (tf.nn.fixed_unigram_candidate_sampler(
-        true_classes=labels_matrix,
-        num_true=1,
-        num_sampled=opts.num_samples,
-        unique=True,
-        range_max=opts.vocab_size,
-        distortion=0.75,
-        unigrams=opts.vocab_counts.tolist()))
+            true_classes=labels_matrix,
+            num_true=1,
+            num_sampled=opts.num_samples,
+            unique=True,
+            range_max=opts.vocab_size,
+            distortion=0.75,
+            unigrams=opts.vocab_counts.tolist()))
+    # tf.nn.fixed_unigram_candidate_sampler()
+      # Args:
+      #   true_classes: A `Tensor` of type `int64` and shape `[batch_size,
+      #     num_true]`. The target classes.
+      #   num_true: An `int`.  The number of target classes per training example.
+      #   num_sampled: An `int`.  The number of classes to randomly sample per batch.
+      #   unique: A `bool`. Determines whether all sampled classes in a batch are
+      #     unique.
+      #   range_max: An `int`. The number of possible classes.
+      #   vocab_file: ...
+      #   distortion: The distortion is used to skew(扭转) the unigram probability
+      #     distribution.  Each weight is first raised to the distortion's power
+      #     before adding to the internal unigram distribution. As a result,
+      #     `distortion = 1.0` gives regular unigram sampling (as defined by the vocab
+      #     file), and `distortion = 0.0` gives a uniform distribution.
+      #   num_reserved_ids: ...
+      #   num_shards: ...
+      #   shard: ...
+      #   unigrams: A list of unigram counts or probabilities, one per ID in
+      #     sequential order. Exactly one of `vocab_file` and `unigrams` should be
+      #     passed to this operation.
+      #   seed: ...
+      #   name: ...
+      #
+      # Returns:
+      #   sampled_candidates: A tensor of type `int64` and shape `[num_sampled]`.
+      #     The sampled classes.
+      #   true_expected_count: ...
+      #   sampled_expected_count: ...
 
     # Embeddings for examples: [batch_size, emb_dim]
     example_emb = tf.nn.embedding_lookup(emb, examples)
@@ -247,6 +277,17 @@ class Word2Vec(object):
     sampled_b = tf.nn.embedding_lookup(sm_b, sampled_ids)
 
     # True logits: [batch_size, 1]
+    # tf.multiply
+    #      x * y element-wise
+    # tf.reduce_sum
+    #  # 'x' is [[1, 1, 1]
+    #         [1, 1, 1]]
+    #   tf.reduce_sum(x) ==> 6
+    #   tf.reduce_sum(x, 0) ==> [2, 2, 2]
+    #   tf.reduce_sum(x, 1) ==> [3, 3]
+    #   tf.reduce_sum(x, 1, keep_dims=True) ==> [[3], [3]]
+    #   tf.reduce_sum(x, [0, 1]) ==> 6
+    # TODO: why the computation of the `true_logits` and `sampled_logits` are different?
     true_logits = tf.reduce_sum(tf.multiply(example_emb, true_w), 1) + true_b
 
     # Sampled logits: [batch_size, num_sampled]
@@ -262,6 +303,8 @@ class Word2Vec(object):
     """Build the graph for the NCE loss."""
 
     # cross-entropy(logits, labels)
+    # # 'tensor' is [[1, 2, 3], [4, 5, 6]]
+    # tf.zeros_like(tensor) ==> [[0, 0, 0], [0, 0, 0]]
     opts = self._options
     true_xent = tf.nn.sigmoid_cross_entropy_with_logits(
         labels=tf.ones_like(true_logits), logits=true_logits)
@@ -348,7 +391,7 @@ class Word2Vec(object):
     opts = self._options
     # The training data. A text file.
     # skipgram_word2vec.build_graph() called once
-    # skipgram_word2vec.Compute() called multiple times 
+    # skipgram_word2vec.Compute() called multiple times
     (words, counts, words_per_epoch, self._epoch, self._words, examples,
      labels) = word2vec.skipgram_word2vec(filename=opts.train_data,
                                           batch_size=opts.batch_size,

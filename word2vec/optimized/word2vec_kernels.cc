@@ -86,7 +86,7 @@ class SkipgramWord2vecOp : public OpKernel {
     auto Texamples = examples.flat<int32>();
     Tensor labels(DT_INT32, TensorShape({batch_size_}));
     auto Tlabels = labels.flat<int32>();
-    {
+    { // lock scope 
       mutex_lock l(mu_);
       for (int i = 0; i < batch_size_; ++i) {
         Texamples(i) = precalc_examples_[precalc_index_].input;
@@ -152,6 +152,7 @@ class SkipgramWord2vecOp : public OpKernel {
       if (label_pos_ >= label_limit_) {
         ++total_words_processed_;
         ++sentence_index_;
+        // if the sentence_ buffer is comsumed completely, fill it fully.
         if (sentence_index_ >= kSentenceSize) {
           sentence_index_ = 0;
           for (int i = 0; i < kSentenceSize; ++i, ++example_pos_) {
@@ -162,17 +163,21 @@ class SkipgramWord2vecOp : public OpKernel {
             if (subsample_ > 0) {
               int32 word_freq = freq_.flat<int32>()(corpus_[example_pos_]);
               // See Eq. 5 in http://arxiv.org/abs/1310.4546
+              // Distributed Representations of Words and Phrases and their
+              // Compositionality
               float keep_prob =
                   (std::sqrt(word_freq / (subsample_ * corpus_size_)) + 1) *
                   (subsample_ * corpus_size_) / word_freq;
               if (rng_.RandFloat() > keep_prob) {
+                // ignore the word in example_pos_
                 i--;
                 continue;
               }
             }
             sentence_[i] = corpus_[example_pos_];
-          }
+          }// for
         }
+
         const int32 skip = 1 + rng_.Uniform(window_size_);
         label_pos_ = std::max<int32>(0, sentence_index_ - skip);
         label_limit_ =
@@ -181,8 +186,9 @@ class SkipgramWord2vecOp : public OpKernel {
       if (sentence_index_ != label_pos_) {
         break;
       }
+      // now sentence_index_ equals to label_pos_, advance the label_pos_ by one
       ++label_pos_;
-    }
+    }// while
     *example = sentence_[sentence_index_];
     *label = sentence_[label_pos_++];
   }
