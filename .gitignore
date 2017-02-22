@@ -1,0 +1,11 @@
+models/
+tutorials/
+**/__pycache__/
+*.pyc
+tmp.*
+*.gz
+*.zip
+*.png
+questions-words.txt
+text8
+*.so
