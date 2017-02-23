@@ -303,8 +303,13 @@ class Word2Vec(object):
     """Build the graph for the NCE loss."""
 
     # cross-entropy(logits, labels)
+    # tf.nn.sigmoid_cross_entropy_with_logits
+    # tf.nn.softmax_cross_entropy_with_logits
+    #
     # # 'tensor' is [[1, 2, 3], [4, 5, 6]]
     # tf.zeros_like(tensor) ==> [[0, 0, 0], [0, 0, 0]]
+    # NOTE: Why use tf.zeros_like and tf.ones_like
+    #       Why use sigmoid_cross_entropy instead of softmax_cross_entropy ?
     opts = self._options
     true_xent = tf.nn.sigmoid_cross_entropy_with_logits(
         labels=tf.ones_like(true_logits), logits=true_logits)

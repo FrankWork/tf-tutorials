@@ -9,3 +9,5 @@ tmp.*
 questions-words.txt
 text8
 *.so
+BUILD
+tmp
