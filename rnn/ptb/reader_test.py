@@ -49,8 +49,17 @@ class PtbReaderTest(tf.test.TestCase):
     batch_size = 3
     num_steps = 2
     x, y = reader.ptb_producer(raw_data, batch_size, num_steps)
+    # data=array( # reshaped_data in ptb_producer
+    #   [[4, 3, 2, 1, 0],
+    #    [5, 6, 1, 1, 1],
+    #    [1, 0, 3, 4, 1]], dtype=int32)
     with self.test_session() as session:
+    #   A coordinator(协调者) for threads.
+    #   |
+    #   | a simple mechanism to coordinate the termination of a
+    #   | set of threads
       coord = tf.train.Coordinator()
+      # Starts all queue runners collected in the graph
       tf.train.start_queue_runners(session, coord=coord)
       try:
         xval, yval = session.run([x, y])

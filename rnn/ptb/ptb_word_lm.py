@@ -109,6 +109,21 @@ class PTBModel(object):
     # initialized to 1 but the hyperparameters of the model would need to be
     # different than reported in the paper.
     def lstm_cell():
+      # tf.contrib.rnn.BasicLSTMCell
+      # https://www.tensorflow.org/api_docs/python/tf/contrib/rnn/BasicLSTMCell
+      #  The implementation is based on: [Recurrent Neural Network Regularization](http://arxiv.org/abs/1409.2329).
+      #  __init__(self, num_units, forget_bias=1.0, input_size=None, state_is_tuple=T
+        # rue, activation=<function tanh at 0x7f7a7f1eebf8>)
+        #  |      Initialize the basic LSTM cell.
+        #  |
+        #  |      Args:
+        #  |        num_units: int, The number of units in the LSTM cell.
+        #  |        forget_bias: float, The bias added to forget gates (see above).
+        #  |        input_size: Deprecated and unused.
+        #  |        state_is_tuple: If True, accepted and returned states are 2-tuples of
+        #  |          the `c_state` and `m_state`.  If False, they are concatenated
+        #  |          along the column axis.  The latter behavior will soon be deprecated.
+        #  |        activation: Activation function of the inner states.
       return tf.contrib.rnn.BasicLSTMCell(
           size, forget_bias=0.0, state_is_tuple=True)
     attn_cell = lstm_cell
@@ -116,17 +131,47 @@ class PTBModel(object):
       def attn_cell():
         return tf.contrib.rnn.DropoutWrapper(
             lstm_cell(), output_keep_prob=config.keep_prob)
+    # tf.contrib.rnn.MultiRNNCell
+    #  __init__(self, cells, state_is_tuple=True)
+     # |      Create a RNN cell composed sequentially of a number of RNNCells.
+     # |
+     # |      Args:
+     # |        cells: list of RNNCells that will be composed in this order.
+     # |        state_is_tuple: If True, accepted and returned states are n-tuples, where
+     # |          `n = len(cells)`.  If False, the states are all
+     # |          concatenated along the column axis.  This latter behavior will soon be
+     # |          deprecated.
+    #  zero_state(self, batch_size, dtype)
+    #  |      Return zero-filled state tensor(s).
+    #  |
+    #  |      Args:
+    #  |        batch_size: int, float, or unit Tensor representing the batch size.
+    #  |        dtype: the data type to use for the state.
+    #  |
+    #  |      Returns:
+    #  |        If `state_size` is an int or TensorShape, then the return value is a
+    #  |        `N-D` tensor of shape `[batch_size x state_size]` filled with zeros.
+    #  |
+    #  |        If `state_size` is a nested list or tuple, then the return value is
+    #  |        a nested list or tuple (of the same structure) of `2-D` tensors with
+    #  |      the shapes `[batch_size x s]` for each s in `state_size`.
     cell = tf.contrib.rnn.MultiRNNCell(
         [attn_cell() for _ in range(config.num_layers)], state_is_tuple=True)
 
     self._initial_state = cell.zero_state(batch_size, data_type())
 
     with tf.device("/cpu:0"):
+      # Gets an existing variable with these parameters or create a new one.
       embedding = tf.get_variable(
           "embedding", [vocab_size, size], dtype=data_type())
       inputs = tf.nn.embedding_lookup(embedding, input_.input_data)
 
     if is_training and config.keep_prob < 1:
+      # Computes dropout.
+        #
+        # With probability `keep_prob`, outputs the input element scaled up by
+        # `1 / keep_prob`, otherwise outputs `0`.  The scaling is so that the expected
+        # sum is unchanged.
       inputs = tf.nn.dropout(inputs, config.keep_prob)
 
     # Simplified version of models/tutorials/rnn/rnn.py's rnn().
@@ -140,6 +185,9 @@ class PTBModel(object):
     #                            initial_state=self._initial_state)
     outputs = []
     state = self._initial_state
+    # [variable_scope how-to]
+    # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/g3doc/how_tos/variable_scope/index.md
+    #  share large sets of variables and initialize all of them in one place
     with tf.variable_scope("RNN"):
       for time_step in range(num_steps):
         if time_step > 0: tf.get_variable_scope().reuse_variables()
@@ -151,6 +199,21 @@ class PTBModel(object):
         "softmax_w", [size, vocab_size], dtype=data_type())
     softmax_b = tf.get_variable("softmax_b", [vocab_size], dtype=data_type())
     logits = tf.matmul(output, softmax_w) + softmax_b
+    # sequence_loss_by_example(logits, targets, weights, average_across_timesteps=True, softmax_loss_function=None, name=None)
+    # Weighted cross-entropy loss for a sequence of logits (per example).
+    #
+    # Args:
+    #   logits: List of 2D Tensors of shape [batch_size x num_decoder_symbols].
+    #   targets: List of 1D batch-sized int32 Tensors of the same length as logits.
+    #   weights: List of 1D batch-sized float-Tensors of the same length as logits.
+    #   average_across_timesteps: If set, divide the returned cost by the total
+    #     label weight.
+    #   softmax_loss_function: Function (labels-batch, inputs-batch) -> loss-batch
+    #     to be used instead of the standard softmax (the default if this is None).
+    #   name: Optional name for this operation, default: "sequence_loss_by_example".
+    #
+    # Returns:
+    #   1D batch-sized float Tensor: The log-perplexity for each sequence.
     loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example(
         [logits],
         [tf.reshape(input_.targets, [-1])],
@@ -163,6 +226,45 @@ class PTBModel(object):
 
     self._lr = tf.Variable(0.0, trainable=False)
     tvars = tf.trainable_variables()
+    # clip_by_global_norm(t_list, clip_norm, use_norm=None, name=None)
+    # Clips values of multiple tensors by the ratio of the sum of their norms.
+    #
+    # Given a tuple or list of tensors `t_list`, and a clipping ratio `clip_norm`,
+    # this operation returns a list of clipped tensors `list_clipped`
+    # and the global norm (`global_norm`) of all tensors in `t_list`. Optionally,
+    # if you've already computed the global norm for `t_list`, you can specify
+    # the global norm with `use_norm`.
+    #
+    # To perform the clipping, the values `t_list[i]` are set to:
+    #
+    #     t_list[i] * clip_norm / max(global_norm, clip_norm)
+    #
+    # where:
+    #
+    #     global_norm = sqrt(sum([l2norm(t)**2 for t in t_list]))
+    #
+    # If `clip_norm > global_norm` then the entries in `t_list` remain as they are
+    # , otherwise they're all shrunk by the global ratio.
+    #
+    # Any of the entries of `t_list` that are of type `None` are ignored.
+    #
+    # This is the correct way to perform gradient clipping (for example, see
+    # [Pascanu et al., 2012](http://arxiv.org/abs/1211.5063)
+    # ([pdf](http://arxiv.org/pdf/1211.5063.pdf))).
+    #
+    # However, it is slower than `clip_by_norm()` because all the parameters must be
+    # ready before the clipping operation can be performed.
+    #
+    # Args:
+    #   t_list: A tuple or list of mixed `Tensors`, `IndexedSlices`, or None.
+    #   clip_norm: A 0-D (scalar) `Tensor` > 0. The clipping ratio.
+    #   use_norm: A 0-D (scalar) `Tensor` of type `float` (optional). The global
+    #     norm to use. If not provided, `global_norm()` is used to compute the norm.
+    #   name: A name for the operation (optional).
+    #
+    # Returns:
+    #   list_clipped: A list of `Tensors` of the same type as `list_t`.
+    #   global_norm: A 0-D (scalar) `Tensor` representing the global norm.
     grads, _ = tf.clip_by_global_norm(tf.gradients(cost, tvars),
                                       config.max_grad_norm)
     optimizer = tf.train.GradientDescentOptimizer(self._lr)

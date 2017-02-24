@@ -11,3 +11,6 @@ text8
 *.so
 BUILD
 tmp
+*.tar
+*.tgz
+simple-examples/
