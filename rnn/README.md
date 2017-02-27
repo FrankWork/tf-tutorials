@@ -35,7 +35,7 @@ python ptb_word_lm.py --data_path=simple-examples/data/ --model=small
 - [Sutskever et al., 2014](https://arxiv.org/abs/1409.3215): Multi-layer
 - [Bahdanau et al., 2014](http://arxiv.org/abs/1409.0473): Attention Mechanism Model
 - [Jean et. al., 2014](https://arxiv.org/abs/1412.2007): Very Large Target Vocabulary
-
+- [Vinyals et. al., 2015](https://arxiv.org/abs/1412.7449):
 
 Download data from the [WMT'15 Website](http://www.statmt.org/wmt15/translation-task.html).  
 It takes about 20GB of disk space.

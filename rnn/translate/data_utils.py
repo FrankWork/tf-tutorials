@@ -41,7 +41,9 @@ EOS_ID = 2
 UNK_ID = 3
 
 # Regular expressions used to tokenize.
+# type(b'abc'): <class 'bytes'>, type('abc'):<class 'str'>
 _WORD_SPLIT = re.compile(b"([.,!?\"':;)(])")
+# `r` for raw string, '\d' for digits instead of '\\d'
 _DIGIT_RE = re.compile(br"\d")
 
 # URLs for WMT data.
@@ -138,9 +140,12 @@ def create_vocabulary(vocabulary_path, data_path, max_vocabulary_size,
         counter += 1
         if counter % 100000 == 0:
           print("  processing line %d" % counter)
+        # as_bytes(bytes_or_text, encoding='utf-8')
+        # Converts either bytes or unicode to `bytes`, using utf-8 encoding for text.
         line = tf.compat.as_bytes(line)
         tokens = tokenizer(line) if tokenizer else basic_tokenizer(line)
         for w in tokens:
+          # if normalize, convert '2017' to '0000'
           word = _DIGIT_RE.sub(b"0", w) if normalize_digits else w
           if word in vocab:
             vocab[word] += 1
@@ -241,6 +246,7 @@ def data_to_token_ids(data_path, target_path, vocabulary_path,
             print("  tokenizing line %d" % counter)
           token_ids = sentence_to_token_ids(tf.compat.as_bytes(line), vocab,
                                             tokenizer, normalize_digits)
+          # one sentecne per line
           tokens_file.write(" ".join([str(tok) for tok in token_ids]) + "\n")
 
 
