@@ -95,12 +95,15 @@ class Seq2SeqModel(object):
     softmax_loss_function = None
     # Sampled softmax only makes sense if we sample less than vocabulary size.
     if num_samples > 0 and num_samples < self.target_vocab_size:
+      # [variable_scope how-to]
+      # https://www.tensorflow.org/programmers_guide/variable_scope
       w_t = tf.get_variable("proj_w", [self.target_vocab_size, size], dtype=dtype)
       w = tf.transpose(w_t)
       b = tf.get_variable("proj_b", [self.target_vocab_size], dtype=dtype)
       output_projection = (w, b)
 
       def sampled_loss(labels, inputs):
+        # [-1, 1] is column vector
         labels = tf.reshape(labels, [-1, 1])
         # We need to compute the sampled_softmax_loss using 32bit floats to
         # avoid numerical instabilities.

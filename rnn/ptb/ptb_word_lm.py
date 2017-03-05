@@ -186,7 +186,7 @@ class PTBModel(object):
     outputs = []
     state = self._initial_state
     # [variable_scope how-to]
-    # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/g3doc/how_tos/variable_scope/index.md
+    # https://www.tensorflow.org/programmers_guide/variable_scope
     #  share large sets of variables and initialize all of them in one place
     with tf.variable_scope("RNN"):
       for time_step in range(num_steps):
