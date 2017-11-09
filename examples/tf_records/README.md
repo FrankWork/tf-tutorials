@@ -27,4 +27,8 @@ Batch `Example` or `SequenceExample`
 
 ## shuffle_batch.py
 
-Shuffle batch `Example` or `SequenceExample`
+Shuffle batch `Example`
+
+## dataset.py
+
+`tf.data.Dataset` to shuffle and batch `Example` and `SequenceExample`

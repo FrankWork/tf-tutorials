@@ -43,25 +43,25 @@ if __name__ == '__main__':
       except tf.errors.OutOfRangeError:
         print('Done training')
 
-  with tf.Graph().as_default():
-    name, age, scores, bills = parse_sequence_example()
-    name, age, scores, bills = tf.train.shuffle_batch([name, age, scores, bills], 3, 10, 3)
+  # with tf.Graph().as_default():
+  #   name, age, scores, bills = parse_sequence_example()
+  #   name, age, scores, bills = tf.train.shuffle_batch([name, age, scores, bills], 3, 10, 3)
 
-    init_op = tf.group(tf.global_variables_initializer(),
-                          tf.local_variables_initializer())
+  #   init_op = tf.group(tf.global_variables_initializer(),
+  #                         tf.local_variables_initializer())
 
-    sv = tf.train.Supervisor()
-    with sv.managed_session() as sess:
-      sess.run(init_op)
-      print('-'*20 + ' sequence example ' + '-'*20)
+  #   sv = tf.train.Supervisor()
+  #   with sv.managed_session() as sess:
+  #     sess.run(init_op)
+  #     print('-'*20 + ' sequence example ' + '-'*20)
 
-      try:
-        while not sv.should_stop():
-          n, a, s, b = sess.run([name, age, scores, bills])
-          print('-'*20)
-          print(n)
-          print(a)
-          print(s)
-          print(b)
-      except tf.errors.OutOfRangeError:
-        print('Done training')
+  #     try:
+  #       while not sv.should_stop():
+  #         n, a, s, b = sess.run([name, age, scores, bills])
+  #         print('-'*20)
+  #         print(n)
+  #         print(a)
+  #         print(s)
+  #         print(b)
+  #     except tf.errors.OutOfRangeError:
+  #       print('Done training')
