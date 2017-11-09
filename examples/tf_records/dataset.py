@@ -43,26 +43,53 @@ def parse_sequence_example(serialized_example):
 parse_func = parse_example
 filename = example_file
 
-# parse_func = parse_sequence_example
-# filename = se_example_file
+with tf.Graph().as_default():
+  dataset = tf.data.TFRecordDataset([filename])
+  dataset = dataset.map(parse_func)  # Parse the record into tensors.
+  # dataset = dataset.shuffle(buffer_size=100)
 
-dataset = tf.data.TFRecordDataset([filename])
-dataset = dataset.map(parse_func)  # Parse the record into tensors.
-# dataset = dataset.shuffle(buffer_size=100)
+  dataset = dataset.repeat(1)        # Number of epoches
+  dataset = dataset.batch(3)
+  iterator = dataset.make_one_shot_iterator()
+  next = iterator.get_next()
 
+  with tf.train.MonitoredTrainingSession() as sess:
+    print('-'*20 + ' example ' + '-'*20)
+    while not sess.should_stop():
+      name, age, scores = sess.run(next)
+      print('-'*20)
+      print(name)
+      print(age)
+      print(scores)
 
-dataset = dataset.repeat(1)        # Number of epoches
-dataset = dataset.batch(3)
-# dataset = dataset.padded_batch(3, padded_shapes=[None])
-iterator = dataset.make_one_shot_iterator()
+parse_func = parse_sequence_example
+filename = se_example_file
 
-next = iterator.get_next()
+with tf.Graph().as_default():
+  dataset = tf.data.TFRecordDataset([filename])
+  dataset = dataset.map(parse_func)  # Parse the record into tensors.
+  # dataset = dataset.shuffle(buffer_size=100)
 
+  dataset = dataset.repeat(1)        # Number of epoches
+  # dataset = dataset.batch(1)
+  dataset = dataset.padded_batch(3, padded_shapes=([None], [None], [None, -1], [None, -1]))
+  iterator = dataset.make_one_shot_iterator()
+  
+  # (TensorShape([Dimension(None)]), 
+  # TensorShape([Dimension(None)]), 
+  # TensorShape([Dimension(None), Dimension(None)]),
+  #  TensorShape([Dimension(None), Dimension(None)]))
+  
+  # (TensorShape([]), TensorShape([]), TensorShape([Dimension(None)]), TensorShape([Dimension(None)]))
 
-with tf.train.MonitoredTrainingSession() as sess:
-  while not sess.should_stop():
-    name, age, scores = sess.run(next)
-    print('-'*20)
-    print(name)
-    print(age)
-    print(scores)
+  next = iterator.get_next()
+
+  with tf.train.MonitoredTrainingSession() as sess:
+    print('-'*20 + ' sequence example ' + '-'*20)
+    while not sess.should_stop():
+      name, age, scores, bills = sess.run(next)
+      # print('-'*20)
+      # print(name)
+      # print(age)
+      # print(scores)
+      # print(bills)
