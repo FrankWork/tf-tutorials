@@ -21,14 +21,10 @@ Tutorials on TFRecord, Example, SequenceExample
 - `tf.train.FeatureLists`   : Protocol Buffers `map` field
 - `tf.train.SequenceExample`: A wrapper of `Features` and `FeatureLists`
 
-## batch.py
-
-Batch `Example` or `SequenceExample`
-
-## shuffle_batch.py
-
-Shuffle batch `Example`
-
 ## dataset.py
 
-`tf.data.Dataset` to shuffle and batch `Example` and `SequenceExample`
+`tf.data.Dataset` to shuffle and batch `Example`
+
+## `dataset_se_example`.py
+
+`tf.data.Dataset` to shuffle and batch `SequenceExample`
