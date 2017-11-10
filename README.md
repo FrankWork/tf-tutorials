@@ -11,7 +11,7 @@
 - [word2vec/optimized](https://github.com/tensorflow/models/tree/master/tutorials/embedding)
 - [rnn](https://github.com/tensorflow/models/tree/master/tutorials/rnn)
 
-## Examples of TensorFlow Classes/Functions
+## Examples of TensorFlow 
 
-- examples/cxxop
-- examples/tf_records: TensorFlow TFRecord Format Tutorials
+- cxxop: Gradient Reversal Layer op
+- tf_records: TensorFlow TFRecord Format Tutorials
