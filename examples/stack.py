@@ -1,10 +1,13 @@
 import tensorflow as tf
 
-length = tf.range(1, 11)
-idx = tf.stack([tf.range(10), length-1], axis=1)
+arr0 = tf.range(10)
+arr1 = tf.range(1, 11)
+idx0 = tf.stack([arr0, arr1], axis=0)
+idx1 = tf.stack([arr0, arr1], axis=1)
 
 with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
   
-  vidx = sess.run(idx)
-  print(vidx)
+  for val in sess.run([arr0, arr1, idx0, idx1]):
+    print(val)
+    print('-'*30)
