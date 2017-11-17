@@ -17,19 +17,6 @@ def axis():
       print(val)
       print('-'*30)
 
-def concat():
-  arr0 = tf.reshape(tf.range(15), [5, 3])
-  arr1 = tf.reshape(tf.range(10)*2, [5, 2])
-  c = tf.concat([arr0, arr1], axis=1)
-  print(arr0.shape)
-  print(arr1.shape)
-  print(c.shape)
-  with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    
-    for val in sess.run([arr0, arr1, c]):
-      print(val)
-      print('-'*30)
 
-# axis()
-concat()
+
+axis()
