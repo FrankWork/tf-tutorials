@@ -17,8 +17,7 @@ def axis():
       print(val)
       print('-'*30)
 
-def d3():
-  
+
 
 axis()
 
