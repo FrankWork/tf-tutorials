@@ -34,6 +34,7 @@ def parse_sequence_example(serialized_example):
                       context_features   = context_features,
                       sequence_features  = sequence_features)
 
+  # tensors
   name = context_dict['name']
   # name = tf.decode_raw(name, tf.uint8)
   age = context_dict['age']
@@ -50,9 +51,10 @@ with tf.Graph().as_default():
   dataset = tf.data.TFRecordDataset([filename])
   dataset = dataset.map(parse_func)  # Parse the record into tensors.
   # dataset = dataset.shuffle(buffer_size=100)
-  dataset = dataset.repeat(1)        # Number of epoches
+  dataset = dataset.repeat(3)        # Number of epoches
   dataset = dataset.padded_batch(3, padded_shapes=([], [], [None], [None]))
   iterator = dataset.make_one_shot_iterator()
+  # a list
   next = iterator.get_next()
 
   print(dataset.output_shapes)
@@ -61,6 +63,5 @@ with tf.Graph().as_default():
     print('-'*20 + ' sequence example ' + '-'*20)
     while not sess.should_stop():
       print('-'*20)
-      np_arrs = sess.run(next)
-      for np_arr in np_arrs:
-        print(np_arr)
+      _, _, _, bills = sess.run(next)
+      print(bills.shape)
