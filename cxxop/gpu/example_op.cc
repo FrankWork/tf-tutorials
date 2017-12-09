@@ -11,8 +11,6 @@ REGISTER_OP("ExampleOp")
         return Status::OK();
       })
     .SetIsStateful()
-    .Doc(R"doc(
-Gradient Reversal Layer proposed in paper 'Unsupervised Domain Adaptation by Backpropagation'.
-)doc");
+    .Doc(R"doc(GPU op Example)doc");
 
 }  // end namespace tensorflow

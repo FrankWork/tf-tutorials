@@ -13,5 +13,5 @@
 
 ## Examples of TensorFlow 
 
-- cxxop: Gradient Reversal Layer op
+- cxxop: implementation of Gradient Reversal Layer op
 - tf_records: TensorFlow TFRecord Format Tutorials
