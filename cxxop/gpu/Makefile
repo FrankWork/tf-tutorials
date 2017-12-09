@@ -13,16 +13,18 @@ LFLAGS = -fPIC -D_GLIBCXX_USE_CXX11_ABI=0 -I$(TF_INC) -I$(NSYNC_INC) \
 
 
 NVCC = /usr/local/cuda/bin/nvcc
-NVCC_CFLAGS = -std=c++11 -I$(TF_INC)  -c
-NVCC_LFLAGS = -x cu -Xcompiler -fPIC
+NVCC_CFLAGS = -std=c++11 -c -I$(TF_INC) -I$(NSYNC_INC) 
+NVCC_LFLAGS = -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC
 
 
 all: example_op.so
 
 
-example_op_cu.o: kernel_example.cu.cc
-	$(NVCC) $(NVCC_CFLAGS) -c $^ $(NVCC_LFLAGS) -o $@
+example_op.cu.o: kernel_example.cu.cc example.h
+	$(NVCC) $(NVCC_CFLAGS) -c $< $(NVCC_LFLAGS) -o $@
+# -D_MWAITXINTRIN_H_INCLUDED to avoid errors from mwaitxintrin.h
 
-example_op.so: example_op_cu.o example.h example_op.cc kernel_example.cc
-	$(CXX) $(CFLAGS) $^ $(LFLAGS) -lcuda -o $@ -O2
+
+example_op.so: example_op.cu.o example.h example_op.cc kernel_example.cc
+	$(CXX) $(CFLAGS) $^ $(LFLAGS) -lcudart -o $@ -O2
 
