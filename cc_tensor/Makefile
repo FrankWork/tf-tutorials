@@ -1,8 +1,6 @@
 
-TF_ROOT := /data0/ad_dm1/shixi_zhihui3/tf1.10
-
-TF_INC := $(TF_ROOT)/bazel-genfiles/
-TF_LIB := $(TF_ROOT)/bazel-bin/tensorflow/
+TF_INC := $(TF_ROOT)/include
+TF_LIB := $(TF_ROOT)/lib
 
 GCC := g++
 
